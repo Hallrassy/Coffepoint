@@ -54,11 +54,18 @@ test('phone verification, drinks and actual Firestore save on mobile', async ({ 
   expect(documents[0].fields.status.stringValue).toBe('pending');
   await page.goto('/profile.html');
   await expect(page.locator('#active-bookings')).toContainText('Кабанбай');
+  await page.locator('#link-email-address').fill('booking-guest@example.test');
+  await page.locator('#link-email-password').fill('TestPass123!');
+  await page.locator('#link-email-submit').click();
+  await expect(page.locator('#profile-details')).toContainText('booking-guest@example.test');
+  const linkedUid = await page.evaluate(async () => (await (await import('/src/firebase.js')).getFirebaseSession()).auth.currentUser.uid);
+  expect(linkedUid).toBe(documents[0].fields.userId.stringValue);
   await page.reload();
   await expect(page.locator('#active-bookings article')).toHaveCount(1);
   const adminContext = await browser.newContext();
   const admin = await adminContext.newPage();
   await admin.goto('http://127.0.0.1:5175/auth.html');
+  await admin.locator('[data-auth-method="email"]').click();
   await admin.locator('#email').fill('admin@coffepoint.test');
   await admin.locator('#password').fill('DemoCoffee123!');
   await admin.locator('#email-login').click();

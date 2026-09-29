@@ -1,11 +1,58 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Управление Coffepoint — Coffepoint</title><link rel="icon" href="/favicon.svg" />
-<link rel="stylesheet" href="/src/styles.css" /><link rel="stylesheet" href="/src/app.css" />
-<script type="module" src="/src/admin.js"></script></head>
-<body><header class="header wrap"><a class="brand" href="/">coffepoint.</a><nav class="app-nav" aria-label="Навигация"><a href="/#restaurants">Кофейни</a><a href="/booking.html">Бронирование</a><a data-account href="/profile.html">Личный кабинет</a></nav></header>
-<main class="app-page wrap"><h1>Управление Coffepoint</h1><p class="status" id="page-status" role="status" aria-live="polite">Загрузка…</p><div id="admin-content" hidden><p id="statistics" class="panel">Загрузка статистики…</p>
-<nav class="actions" aria-label="Разделы администратора"><button class="button" data-section="cafes">Кофейни</button><button class="button" data-section="drinks">Напитки</button><button class="button" data-section="reservations">Бронирования</button><button class="button" data-section="users">Пользователи</button><button class="button" data-section="reviews">Модерация</button></nav>
-<form class="filters" id="admin-filters" hidden><label class="field">Статус<select id="filter-status"><option value="">Все статусы</option><option value="pending">Ожидает</option><option value="confirmed">Подтверждено</option><option value="completed">Завершено</option><option value="cancelled">Отменено</option></select></label><button class="button">Применить</button></form>
-<button class="button" id="seed-catalog" type="button">Добавить демонстрационный каталог</button><button class="button" id="refresh-admin" type="button">Обновить список</button><button class="button" id="new-record" type="button">Добавить</button><section id="editor" class="panel" hidden><h2 id="editor-title"></h2><form id="edit-form" class="stack narrow"><div id="edit-fields" class="stack"></div><div class="actions"><button class="button" id="save-record">Сохранить</button><button class="button" type="button" id="close-editor">Закрыть</button></div></form></section>
-<div id="admin-list" class="list"></div><button class="button" id="admin-more">Показать ещё</button></div></main></body></html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#fbf7f1" />
+  <title>Управление Coffepoint</title>
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <link rel="stylesheet" href="/src/app.css" />
+  <link rel="stylesheet" href="/src/admin.css" />
+  <script type="module" src="/src/admin.js"></script>
+</head>
+<body class="admin-page">
+  <header class="admin-header">
+    <a class="brand" href="/">coffepoint.</a>
+    <span class="admin-header-label">ПРОСТРАНСТВО КОМАНДЫ</span>
+    <nav aria-label="Навигация"><a href="/">На сайт ↗</a><a class="admin-account" href="/profile.html">Личный кабинет</a></nav>
+  </header>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <p class="eyebrow">УПРАВЛЕНИЕ</p>
+      <nav class="admin-sections" aria-label="Разделы администратора">
+        <button type="button" data-section="cafes" aria-current="page"><span aria-hidden="true">01</span>Кофейни</button>
+        <button type="button" data-section="drinks"><span aria-hidden="true">02</span>Напитки</button>
+        <button type="button" data-section="reservations"><span aria-hidden="true">03</span>Бронирования</button>
+        <button type="button" data-section="users"><span aria-hidden="true">04</span>Пользователи</button>
+        <button type="button" data-section="reviews"><span aria-hidden="true">05</span>Отзывы</button>
+      </nav>
+      <div class="admin-sidebar-note"><span aria-hidden="true">✳</span><p>Всё для тёплого<br />приёма гостей.</p></div>
+    </aside>
+    <main class="admin-main">
+      <div class="admin-heading"><div><p class="eyebrow">COFFEPOINT / ОБЗОР СЕТИ</p><h1>Всё под рукой.</h1><p class="admin-muted">Ваши кофейни, гости и предстоящие встречи.</p></div><span class="admin-role">Администратор</span></div>
+      <p class="status" id="page-status" role="status" aria-live="polite">Загрузка…</p>
+      <div id="admin-content" hidden>
+        <div id="statistics" class="admin-statistics" aria-label="Статистика сети">Загрузка статистики…</div>
+        <section class="admin-workspace" aria-labelledby="section-title">
+          <div class="admin-toolbar">
+            <div><p class="eyebrow" id="section-kicker">МЕСТА ДЛЯ ВСТРЕЧ</p><h2 id="section-title">Кофейни</h2><p class="admin-muted" id="section-description">Адреса, атмосфера и доступность бронирования.</p></div>
+            <div class="actions"><button class="admin-secondary" id="refresh-admin" type="button">↻ Обновить</button><button class="button" id="new-record" type="button">+ Добавить кофейню</button></div>
+          </div>
+          <form class="admin-filters" id="admin-filters" hidden><label class="field">Статус бронирования<select id="filter-status"><option value="">Все статусы</option><option value="pending">Ожидает</option><option value="confirmed">Подтверждено</option><option value="completed">Завершено</option><option value="cancelled">Отменено</option></select></label><button class="admin-secondary">Применить</button></form>
+          <div id="admin-list" class="admin-records" data-view="cafes" aria-busy="false"></div>
+          <div class="admin-list-footer"><span id="list-count" class="admin-muted"></span><button class="admin-secondary" id="admin-more" hidden>Показать ещё</button></div>
+        </section>
+        <details class="admin-setup"><summary>Настройка каталога</summary><p>Для знакомства с приложением можно добавить семь кофеен и меню. Уже существующие записи сохранятся.</p><button class="admin-secondary" id="seed-catalog" type="button">Добавить демонстрационный каталог</button></details>
+      </div>
+    </main>
+  </div>
+  <dialog id="editor" class="admin-editor" aria-labelledby="editor-title" hidden>
+    <div class="admin-editor-heading"><div><p class="eyebrow">ДЕТАЛИ ЗАПИСИ</p><h2 id="editor-title"></h2></div><button type="button" id="close-editor" class="admin-close" aria-label="Закрыть редактор">×</button></div>
+    <form id="edit-form"><div id="edit-fields" class="admin-edit-fields"></div><p id="editor-status" class="status" role="status"></p><div class="admin-editor-footer"><button class="button" id="save-record">Сохранить изменения</button></div></form>
+  </dialog>
+</body>
+</html>

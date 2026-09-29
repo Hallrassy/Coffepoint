@@ -5,6 +5,14 @@
 <script type="module" src="/src/profile.js"></script></head>
 <body><header class="header wrap"><a class="brand" href="/">coffepoint.</a><nav class="app-nav" aria-label="Навигация"><a href="/#restaurants">Кофейни</a><a href="/booking.html">Бронирование</a><a data-account href="/profile.html">Личный кабинет</a></nav></header>
 <main class="app-page wrap"><h1>Личный кабинет</h1><p class="status" id="page-status" role="status" aria-live="polite">Загрузка…</p><div id="profile-content" hidden><div class="actions"><a class="button" id="admin-link" href="/admin.html" hidden>Админ-панель</a><button class="button" id="logout">Выйти</button></div>
-<section class="panel narrow"><h2>Профиль</h2><p id="profile-details"></p><form id="profile-form" class="stack"><label class="field">Имя<input id="profile-name" required maxlength="120" autocomplete="name" /></label><button class="button" id="save-profile">Сохранить</button></form><p>Контакты берутся из Firebase Authentication. Подтвердить телефон можно при бронировании.</p></section>
+<section class="panel narrow"><h2>Профиль</h2><p id="profile-details"></p><form id="profile-form" class="stack"><label class="field">Имя<input id="profile-name" required maxlength="120" autocomplete="name" /></label><button class="button" id="save-profile">Сохранить</button></form><p>Телефон подтверждается при бронировании. Email и телефон могут использоваться для входа в один аккаунт.</p></section>
+<section id="link-email-panel" class="panel narrow" hidden>
+<h2>Добавить email</h2><p>У этого аккаунта ещё нет входа по email. Привяжите адрес и пароль: ваш телефон, профиль и бронирования сохранятся.</p>
+<form id="link-email-form" class="stack">
+<label class="field">Email<input id="link-email-address" type="email" required maxlength="254" autocomplete="email" placeholder="name@example.com" /></label>
+<label class="field">Пароль для входа по email<input id="link-email-password" type="password" required minlength="6" autocomplete="new-password" /></label>
+<button class="button" id="link-email-submit">Привязать email</button>
+</form><p id="link-email-status" class="status" role="status" aria-live="polite"></p>
+</section>
 <section><h2>Активные бронирования</h2><p>Статусы обновляются автоматически.</p><div id="active-bookings" class="list"></div><button class="button" id="active-more">Показать ещё</button></section>
 <section class="panel"><h2>История бронирований</h2><div id="history-bookings" class="list"></div><button class="button" id="history-more">Показать ещё</button></section></div></main></body></html>

@@ -28,7 +28,8 @@ service cloud.firestore {
         && request.resource.data.phone == request.auth.token.get('phone_number', '');
       allow update: if validUser(request.resource.data, uid) && (
         (owner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'email', 'phone', 'updatedAt'])
-          && request.resource.data.email == request.auth.token.get('email', '')
+          && (request.resource.data.email == resource.data.email
+            || (request.auth.token.get('email', '') != '' && request.resource.data.email == request.auth.token.email))
           && request.resource.data.phone == request.auth.token.get('phone_number', ''))
         || (isAdmin() && request.auth.uid != uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'updatedAt'])));

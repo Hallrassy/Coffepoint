@@ -1,11 +1,27 @@
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { requireUser, logout } from './auth.js';
+import { requireUser, logout, addEmailToAccount } from './auth.js';
 import { watchMyBookings } from './services/reservations.js';
 import { changeStatus } from './booking/service.js';
 import { $, el, link, button, action, message, report, dateText, money, statuses } from './ui.js';
 let context;
 const feeds = [];
+function renderProfile() {
+  const { user, profile } = context;
+  const methods = [user.email ? 'по email' : '', user.phoneNumber ? 'по телефону' : ''].filter(Boolean).join(' и ');
+  $('profile-details').textContent = `Email: ${profile.email || user.email || 'не указан'}\nТелефон: ${user.phoneNumber || 'не подтверждён'}\nРегистрация: ${dateText(profile.createdAt)}\nВход: ${methods}`;
+  $('link-email-panel').hidden = Boolean(user.email);
+}
+$('link-email-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  void action($('link-email-submit'), async () => {
+    message('Привязываем email…', false, $('link-email-status'));
+    const result = await addEmailToAccount($('link-email-address').value, $('link-email-password').value);
+    Object.assign(context, result);
+    $('link-email-form').reset(); renderProfile();
+    message('Email добавлен. Теперь можно входить по email или телефону.');
+  }, $('link-email-status'));
+});
 function bookingCard(snapshot) {
   const item = snapshot.data(); const card = el('article');
   card.append(el('h3', item.address), el('p', `${dateText(item.startsAt)} · 2 часа · Столик ${item.tableNumber} · Гостей: ${item.guests}`),
@@ -65,7 +81,7 @@ void (async () => {
     context = await requireUser(); if (!context) return;
     const { user, profile, auth } = context;
     $('profile-content').hidden = false; $('profile-name').value = profile.name;
-    $('profile-details').textContent = `Email: ${user.email || 'не указан'}\nТелефон: ${user.phoneNumber || 'не подтверждён'}\nРегистрация: ${dateText(profile.createdAt)}`;
+    renderProfile();
     $('admin-link').hidden = profile.role !== 'admin'; message('');
     feed('active', ['pending', 'confirmed']); feed('history', ['completed', 'cancelled']);
     const stop = onAuthStateChanged(auth, (current) => { if (current?.uid !== user.uid) { feeds.forEach((cleanup) => cleanup()); location.replace('/auth.html'); } });

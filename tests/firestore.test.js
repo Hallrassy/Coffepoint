@@ -218,3 +218,18 @@ test('catalog uses cursors and searchable prefixes', async () => {
   const found = await getDocs(query(collection(db, 'cafes'), where('active', '==', true), where('searchKeywords', 'array-contains', 'coffepoint 07'), orderBy('rating', 'desc'), limit(6)));
   assert.equal(found.size, 1); assert.equal(found.docs[0].id, 'abylai-147');
 });
+
+test('email is retained without an email claim; only Auth email can replace it', async () => {
+  const uid = 'email-guest';
+  const emailDb = env.authenticatedContext(uid, { email: 'saved@example.test', phone_number: phone, firebase: { sign_in_provider: 'password' } }).firestore();
+  const ref = doc(emailDb, 'users', uid);
+  await assertSucceeds(setDoc(ref, { uid, name: 'Email User', email: 'saved@example.test', phone, role: 'user', createdAt: serverTimestamp(), updatedAt: serverTimestamp() }));
+  const phoneRef = doc(user(uid), 'users', uid);
+  await assertSucceeds(updateDoc(phoneRef, { name: 'Новое имя', updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(phoneRef, { email: '', updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(phoneRef, { email: 'other@example.test', updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(ref, { email: 'other@example.test', updatedAt: serverTimestamp() }));
+  const updatedDb = env.authenticatedContext(uid, { email: 'new@example.test', phone_number: phone, firebase: { sign_in_provider: 'password' } }).firestore();
+  await assertSucceeds(updateDoc(doc(updatedDb, 'users', uid), { email: 'new@example.test', updatedAt: serverTimestamp() }));
+  assert.equal((await getDoc(ref)).data().email, 'new@example.test');
+});
