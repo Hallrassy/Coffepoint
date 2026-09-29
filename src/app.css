@@ -1,0 +1,36 @@
+[hidden] { display: none !important; }
+.app-page { padding-block: 45px 80px; }
+.app-page h1 { font-size: clamp(40px, 6vw, 68px); letter-spacing: -1px; margin-bottom: 28px; }
+.app-page h2 { font-size: 34px; margin-bottom: 18px; }
+.app-page h3 { font-size: 26px; }
+.app-nav, .actions, .filters { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; }
+.app-nav { align-items: center; font-size: 13px; }
+.filters { margin-block: 20px; }
+.field { display: grid; gap: 8px; font-size: 13px; min-width: 0; }
+.field input, .field select, .field textarea { width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 5px; background: #fffaf4; color: var(--brown); font: inherit; }
+.field textarea { min-height: 100px; resize: vertical; }
+.stack { display: grid; gap: 18px; }
+.panel { padding: 24px; border: 1px solid var(--line); border-radius: 6px; margin-block: 20px; }
+.panel p { line-height: 1.7; white-space: pre-line; overflow-wrap: anywhere; }
+.panel .actions { margin-top: 16px; }
+.narrow { max-width: 580px; }
+.status { min-height: 24px; margin-block: 14px; font-size: 13px; overflow-wrap: anywhere; }
+[data-error="true"] { color: #a12424; }
+button { font-family: inherit; cursor: pointer; }
+button:disabled { opacity: .55; cursor: wait; }
+.restaurant-card .actions { margin-top: 15px; }
+.cafe-cover { max-height: 450px; border-radius: 6px; margin-bottom: 24px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.review-text { white-space: pre-wrap; }
+.list { display: grid; gap: 14px; margin-block: 20px; }
+.list > article { padding: 20px; border: 1px solid var(--line); border-radius: 5px; min-width: 0; }
+.account-link { font-size: 12px; }
+.catalog-rating { margin-top: 10px; font-size: 12px; }
+:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+@media (max-width: 700px) {
+  .split { grid-template-columns: 1fr; }
+  .app-nav { gap: 10px; }
+  .header { flex-wrap: wrap; padding-block: 20px; }
+  .filters > *, .filters .field { width: 100%; }
+  .panel { padding: 16px; }
+}

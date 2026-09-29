@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Личный кабинет — Coffepoint</title><link rel="icon" href="/favicon.svg" />
+<link rel="stylesheet" href="/src/styles.css" /><link rel="stylesheet" href="/src/app.css" />
+<script type="module" src="/src/profile.js"></script></head>
+<body><header class="header wrap"><a class="brand" href="/">coffepoint.</a><nav class="app-nav" aria-label="Навигация"><a href="/#restaurants">Кофейни</a><a href="/booking.html">Бронирование</a><a data-account href="/profile.html">Личный кабинет</a></nav></header>
+<main class="app-page wrap"><h1>Личный кабинет</h1><p class="status" id="page-status" role="status" aria-live="polite">Загрузка…</p><div id="profile-content" hidden><div class="actions"><a class="button" id="admin-link" href="/admin.html" hidden>Админ-панель</a><button class="button" id="logout">Выйти</button></div>
+<section class="panel narrow"><h2>Профиль</h2><p id="profile-details"></p><form id="profile-form" class="stack"><label class="field">Имя<input id="profile-name" required maxlength="120" autocomplete="name" /></label><button class="button" id="save-profile">Сохранить</button></form><p>Контакты берутся из Firebase Authentication. Подтвердить телефон можно при бронировании.</p></section>
+<section><h2>Активные бронирования</h2><p>Статусы обновляются автоматически.</p><div id="active-bookings" class="list"></div><button class="button" id="active-more">Показать ещё</button></section>
+<section class="panel"><h2>История бронирований</h2><div id="history-bookings" class="list"></div><button class="button" id="history-more">Показать ещё</button></section></div></main></body></html>

@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Управление Coffepoint — Coffepoint</title><link rel="icon" href="/favicon.svg" />
+<link rel="stylesheet" href="/src/styles.css" /><link rel="stylesheet" href="/src/app.css" />
+<script type="module" src="/src/admin.js"></script></head>
+<body><header class="header wrap"><a class="brand" href="/">coffepoint.</a><nav class="app-nav" aria-label="Навигация"><a href="/#restaurants">Кофейни</a><a href="/booking.html">Бронирование</a><a data-account href="/profile.html">Личный кабинет</a></nav></header>
+<main class="app-page wrap"><h1>Управление Coffepoint</h1><p class="status" id="page-status" role="status" aria-live="polite">Загрузка…</p><div id="admin-content" hidden><p id="statistics" class="panel">Загрузка статистики…</p>
+<nav class="actions" aria-label="Разделы администратора"><button class="button" data-section="cafes">Кофейни</button><button class="button" data-section="drinks">Напитки</button><button class="button" data-section="reservations">Бронирования</button><button class="button" data-section="users">Пользователи</button><button class="button" data-section="reviews">Модерация</button></nav>
+<form class="filters" id="admin-filters" hidden><label class="field">Статус<select id="filter-status"><option value="">Все статусы</option><option value="pending">Ожидает</option><option value="confirmed">Подтверждено</option><option value="completed">Завершено</option><option value="cancelled">Отменено</option></select></label><button class="button">Применить</button></form>
+<button class="button" id="seed-catalog" type="button">Добавить демонстрационный каталог</button><button class="button" id="refresh-admin" type="button">Обновить список</button><button class="button" id="new-record" type="button">Добавить</button><section id="editor" class="panel" hidden><h2 id="editor-title"></h2><form id="edit-form" class="stack narrow"><div id="edit-fields" class="stack"></div><div class="actions"><button class="button" id="save-record">Сохранить</button><button class="button" type="button" id="close-editor">Закрыть</button></div></form></section>
+<div id="admin-list" class="list"></div><button class="button" id="admin-more">Показать ещё</button></div></main></body></html>

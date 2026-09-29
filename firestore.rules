@@ -1,0 +1,184 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function phoneUser() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.auth.token.phone_number is string;
+    }
+    function signedIn() { return request.auth != null; }
+    function owner(uid) { return signedIn() && request.auth.uid == uid; }
+    function isAdmin() {
+      return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function bounded() { return request.query.limit != null && request.query.limit <= 50; }
+    function text(value, max) { return value is string && value.size() <= max; }
+    function validUser(d, uid) {
+      return d.keys().hasAll(['uid', 'name', 'email', 'phone', 'role', 'createdAt', 'updatedAt'])
+        && d.keys().hasOnly(['uid', 'name', 'email', 'phone', 'role', 'createdAt', 'updatedAt'])
+        && d.uid == uid && text(d.name, 120) && text(d.email, 254) && text(d.phone, 25)
+        && d.role in ['user', 'admin'] && d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    match /users/{uid} {
+      allow get: if owner(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if owner(uid) && validUser(request.resource.data, uid)
+        && request.resource.data.role == 'user' && request.resource.data.createdAt == request.time
+        && request.resource.data.email == request.auth.token.get('email', '')
+        && request.resource.data.phone == request.auth.token.get('phone_number', '');
+      allow update: if validUser(request.resource.data, uid) && (
+        (owner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'email', 'phone', 'updatedAt'])
+          && request.resource.data.email == request.auth.token.get('email', '')
+          && request.resource.data.phone == request.auth.token.get('phone_number', ''))
+        || (isAdmin() && request.auth.uid != uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'updatedAt'])));
+      allow delete: if false;
+    }
+    function validTable(t, id, number) {
+      return t.keys().hasOnly(['id', 'number', 'seats', 'label']) && t.id == id && t.number == number
+        && t.seats is int && t.seats >= 1 && t.seats <= 6 && text(t.label, 80);
+    }
+    function validCafe(d) {
+      return d.keys().hasOnly(['name', 'nameLower', 'searchKeywords', 'description', 'address', 'image', 'district',
+        'features', 'hours', 'rating', 'active', 'tables', 'createdAt', 'updatedAt'])
+        && text(d.name, 80) && d.name.size() > 0 && text(d.nameLower, 80) && d.nameLower.size() > 0
+        && d.searchKeywords is list && d.searchKeywords.size() <= 80
+        && text(d.description, 2000) && text(d.address, 200) && text(d.image, 1000)
+        && d.district in ['Алмалинский', 'Медеуский', 'Бостандыкский', 'Другой']
+        && text(d.features, 200) && d.hours == '09:00–21:00'
+        && d.rating is number && d.rating >= 0 && d.rating <= 5 && d.active is bool
+        && d.tables.keys().hasOnly(['t1', 't2', 't3', 't4', 't5', 't6'])
+        && validTable(d.tables.t1, 't1', 1) && validTable(d.tables.t2, 't2', 2)
+        && validTable(d.tables.t3, 't3', 3) && validTable(d.tables.t4, 't4', 4)
+        && validTable(d.tables.t5, 't5', 5) && validTable(d.tables.t6, 't6', 6)
+        && d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    match /cafes/{id} {
+      allow read: if true;
+      allow create: if isAdmin() && id.matches('^[a-z0-9-]{1,80}$') && validCafe(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+      allow update: if isAdmin() && validCafe(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
+    }
+    function validDrink(d) {
+      return d.keys().hasAll(['name', 'size', 'price', 'available', 'createdAt', 'updatedAt'])
+        && d.keys().hasOnly(['name', 'size', 'price', 'available', 'createdAt', 'updatedAt'])
+        && text(d.name, 80) && d.name.size() > 0 && text(d.size, 40)
+        && d.price is int && d.price >= 0 && d.price <= 100000 && d.available is bool
+        && d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    match /drinks/{id} {
+      allow read: if true;
+      allow create: if isAdmin() && id.matches('^[a-z0-9-]{1,80}$') && validDrink(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+      allow update: if isAdmin() && validDrink(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
+    }
+    function quantityAt(d, keys, n) { return n < keys.size() ? d[keys[n]] : 0; }
+    function costAt(d, keys, n) {
+      return n < keys.size() ? d[keys[n]] * get(/databases/$(database)/documents/drinks/$(keys[n])).data.price : 0;
+    }
+    function validDrinkAt(d, keys, n) {
+      return n >= keys.size() || (d[keys[n]] is int && d[keys[n]] >= 1 && d[keys[n]] <= 10
+        && get(/databases/$(database)/documents/drinks/$(keys[n])).data.available == true);
+    }
+    function validDrinks(d, total) {
+      let keys = d.keys();
+      return d is map && keys.size() <= 6
+        && validDrinkAt(d, keys, 0) && validDrinkAt(d, keys, 1) && validDrinkAt(d, keys, 2)
+        && validDrinkAt(d, keys, 3) && validDrinkAt(d, keys, 4) && validDrinkAt(d, keys, 5)
+        && quantityAt(d, keys, 0) + quantityAt(d, keys, 1) + quantityAt(d, keys, 2)
+          + quantityAt(d, keys, 3) + quantityAt(d, keys, 4) + quantityAt(d, keys, 5) <= 20
+        && total is int && total == costAt(d, keys, 0) + costAt(d, keys, 1) + costAt(d, keys, 2)
+          + costAt(d, keys, 3) + costAt(d, keys, 4) + costAt(d, keys, 5);
+    }
+    function validStart(t) {
+      // Двухчасовые интервалы, 09:00–21:00 по Алматы (UTC+5).
+      return t is timestamp && t > request.time
+        && int((t.toMillis() + 18000000) / 86400000) <= int((request.time.toMillis() + 18000000) / 86400000) + 30
+        && (t.toMillis() + 18000000) % 86400000 in [32400000, 39600000, 46800000, 54000000, 61200000, 68400000];
+    }
+    function expectedSlot(d) {
+      return d.cafeId + '_' + d.tableId + '_' + string(int(d.startsAt.toMillis() / 1000));
+    }
+    function validReservation(d) {
+      let cafe = get(/databases/$(database)/documents/cafes/$(d.cafeId)).data;
+      return phoneUser()
+        && d.keys().hasAll(['userId', 'cafeId', 'address', 'tableId', 'tableNumber', 'guests',
+          'fullName', 'phone', 'drinks', 'drinksTotal', 'currency', 'consent', 'consentVersion',
+          'startsAt', 'durationMinutes', 'status', 'createdAt', 'updatedAt', 'slotId'])
+        && d.keys().hasOnly(['userId', 'cafeId', 'address', 'tableId', 'tableNumber', 'guests',
+          'fullName', 'phone', 'drinks', 'drinksTotal', 'currency', 'consent', 'consentVersion',
+          'startsAt', 'durationMinutes', 'status', 'createdAt', 'updatedAt', 'slotId'])
+        && d.userId == request.auth.uid && d.phone == request.auth.token.phone_number
+        && d.cafeId is string && cafe.active == true && d.address == cafe.address
+        && d.tableId is string && d.tableId in cafe.tables && d.tableNumber == cafe.tables[d.tableId].number
+        && d.guests is int && d.guests >= 1 && d.guests <= cafe.tables[d.tableId].seats
+        && d.fullName is string && d.fullName.size() >= 3 && d.fullName.size() <= 120
+        && d.fullName.matches('^[^<>\\r\\n\\t ]+( [^<>\\r\\n\\t ]+)+$')
+        && d.consent == true && d.consentVersion == 'booking-contact-v1'
+        && d.status == 'pending' && d.currency == 'KZT' && d.durationMinutes == 120
+        && d.createdAt == request.time && d.updatedAt == request.time && validStart(d.startsAt)
+        && validDrinks(d.drinks, d.drinksTotal) && d.slotId == expectedSlot(d);
+    }
+    function matchingSlot(d, id) {
+      let path = /databases/$(database)/documents/slots/$(d.slotId);
+      let slot = getAfter(path).data;
+      return !exists(path) && slot.reservationId == id
+        && slot.cafeId == d.cafeId && slot.tableId == d.tableId && slot.startsAt == d.startsAt;
+    }
+    function validTransition(old, next) {
+      return (old.status == 'pending' && next.status in ['confirmed', 'cancelled'])
+        || (old.status == 'confirmed' && (next.status == 'cancelled'
+          || (next.status == 'completed' && request.time >= old.startsAt + duration.value(120, 'm'))));
+    }
+    match /reservations/{id} {
+      allow get: if owner(resource.data.userId) || isAdmin();
+      allow list: if (owner(resource.data.userId) && bounded()) || isAdmin();
+      allow create: if id.matches('^[a-f0-9-]{36}$')
+        && validReservation(request.resource.data) && matchingSlot(request.resource.data, id);
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.updatedAt == request.time && validTransition(resource.data, request.resource.data)
+        && (isAdmin() || (owner(resource.data.userId) && request.resource.data.status == 'cancelled' && resource.data.startsAt > request.time))
+        && (request.resource.data.status != 'cancelled'
+          || !existsAfter(/databases/$(database)/documents/slots/$(resource.data.slotId)));
+      allow delete: if false;
+    }
+    function matchingReservation(s, id) {
+      let path = /databases/$(database)/documents/reservations/$(s.reservationId);
+      let d = getAfter(path).data;
+      return !exists(path) && d.userId == request.auth.uid && d.slotId == id
+        && d.cafeId == s.cafeId && d.tableId == s.tableId && d.startsAt == s.startsAt;
+    }
+    match /slots/{id} {
+      // Здесь только занятость и случайный ID заявки, без контактов и UID гостей.
+      allow get: if true;
+      allow list: if request.query.limit != null && request.query.limit <= 6;
+      allow create: if phoneUser()
+        && request.resource.data.keys().hasAll(['cafeId', 'tableId', 'startsAt', 'reservationId'])
+        && request.resource.data.keys().hasOnly(['cafeId', 'tableId', 'startsAt', 'reservationId'])
+        && matchingReservation(request.resource.data, id);
+      allow update: if false;
+      allow delete: if signedIn()
+        && get(/databases/$(database)/documents/reservations/$(resource.data.reservationId)).data.status in ['pending', 'confirmed']
+        && getAfter(/databases/$(database)/documents/reservations/$(resource.data.reservationId)).data.status == 'cancelled'
+        && (owner(get(/databases/$(database)/documents/reservations/$(resource.data.reservationId)).data.userId) || isAdmin());
+    }
+    function validReview(d, id) {
+      return d.keys().hasAll(['cafeId', 'userId', 'userName', 'rating', 'text', 'createdAt', 'updatedAt'])
+        && d.keys().hasOnly(['cafeId', 'userId', 'userName', 'rating', 'text', 'createdAt', 'updatedAt'])
+        && owner(d.userId) && id == d.cafeId + '_' + request.auth.uid
+        && get(/databases/$(database)/documents/cafes/$(d.cafeId)).data.active == true
+        && text(d.userName, 120) && d.userName.size() > 0 && text(d.text, 2000) && d.text.size() >= 3
+        && d.rating is int && d.rating >= 1 && d.rating <= 5 && d.updatedAt == request.time;
+    }
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if validReview(request.resource.data, id) && request.resource.data.createdAt == request.time;
+      allow update: if owner(resource.data.userId) && validReview(request.resource.data, id)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['userName', 'rating', 'text', 'updatedAt']);
+      allow delete: if owner(resource.data.userId) || isAdmin();
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
